@@ -86,7 +86,7 @@ export class HomePage implements OnInit {
       this.storage.set('afternoon_begin', this.afternoonBegin);
 
       if (!this.afternoonEnd) {
-        this.afternoonEnd = this.getTimeEnd(this.afternoonBegin, 4.5);
+        this.afternoonEnd = this.getTimeEnd(this.afternoonBegin, (4.5 - (this.morningDiff / 60)));
       } else {
         this.afternoonDiffChanged(event);
       }
