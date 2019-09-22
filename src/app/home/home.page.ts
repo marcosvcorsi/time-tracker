@@ -117,14 +117,14 @@ export class HomePage implements OnInit {
     this.totalDiff = this.morningDiff + this.afternoonDiff;
   }
 
-  getTimeEnd(dt, plusHours){
+  getTimeEnd(dt, plusHours) {
     const dtStart = moment(dt);
     const dtEnd = dtStart.clone().add(plusHours, 'hours');
 
     return dtEnd.format();
   }
 
-  calculateDiff(init, end, hoursBase){
+  calculateDiff(init, end, hoursBase) {
     if (!init && !end) {
       return 0;
     }
