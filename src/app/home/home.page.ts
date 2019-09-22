@@ -1,12 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import * as moment from 'moment';
+import { Storage } from '@ionic/storage';
 
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
 })
-export class HomePage {
+export class HomePage implements OnInit {
 
   morningBegin;
   morningEnd;
@@ -19,7 +20,37 @@ export class HomePage {
 
   totalDiff = 0;
 
-  constructor() {}
+  constructor(private storage: Storage) {}
+
+  ngOnInit() {
+    this.loadTimes();
+  }
+
+  loadTimes() {
+    this.storage.get('morning_begin').then((val) => {
+      if (val) {
+        this.morningBegin = val;
+      }
+    });
+
+    this.storage.get('morning_end').then((val) => {
+      if (val) {
+        this.morningEnd = val;
+      }
+    });
+
+    this.storage.get('afternoon_begin').then((val) => {
+      if (val) {
+        this.afternoonBegin = val;
+      }
+    });
+
+    this.storage.get('afternoon_end').then((val) => {
+      if (val) {
+        this.afternoonEnd = val;
+      }
+    });
+  }
 
   clearTime() {
     this.morningBegin = '';
@@ -31,23 +62,42 @@ export class HomePage {
     this.morningDiff = 0;
     this.afternoonDiff = 0;
     this.totalDiff = 0;
+
+    this.storage.set('morning_begin', null);
+    this.storage.set('morning_end', null);
+    this.storage.set('afternoon_begin', null);
+    this.storage.set('afternoon_end', null);
   }
 
   morningBeginChanged(event) {
-    if (this.morningBegin && !this.morningEnd) {
-      this.morningEnd = this.getTimeEnd(this.morningBegin, 4);
+    if (this.morningBegin) {
+      this.storage.set('morning_begin', this.morningBegin);
+
+      if (!this.morningEnd) {
+        this.morningEnd = this.getTimeEnd(this.morningBegin, 4);
+      } else {
+        this.morningDiffChanged(event);
+      }
     }
   }
 
   afternoonBeginChanged(event) {
-    if (this.afternoonBegin && !this.afternoonEnd) {
-      this.afternoonEnd = this.getTimeEnd(this.afternoonBegin, 4.5);
+    if (this.afternoonBegin) {
+      this.storage.set('afternoon_begin', this.afternoonBegin);
+
+      if (!this.afternoonEnd) {
+        this.afternoonEnd = this.getTimeEnd(this.afternoonBegin, 4.5);
+      } else {
+        this.afternoonDiffChanged(event);
+      }
     }
   }
 
   morningDiffChanged(event) {
     if (this.morningBegin && this.morningEnd) {
       this.morningDiff = this.calculateDiff(this.morningBegin, this.morningEnd, 4);
+
+      this.storage.set('morning_end', this.morningEnd);
     }
 
     this.sumTotal();
@@ -56,6 +106,8 @@ export class HomePage {
   afternoonDiffChanged(event) {
     if (this.afternoonBegin && this.afternoonEnd) {
       this.afternoonDiff = this.calculateDiff(this.afternoonBegin, this.afternoonEnd, 4.5);
+
+      this.storage.set('afternoon_end', this.afternoonEnd);
     }
 
     this.sumTotal();
