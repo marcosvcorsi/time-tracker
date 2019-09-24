@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import * as moment from 'moment';
 import { Storage } from '@ionic/storage';
+import { ToastController } from '@ionic/angular';
 
 @Component({
   selector: 'app-home',
@@ -20,7 +21,8 @@ export class HomePage implements OnInit {
 
   totalDiff = 0;
 
-  constructor(private storage: Storage) {}
+  constructor(private storage: Storage,
+              private toastCtrl: ToastController) {}
 
   ngOnInit() {
     this.loadTimes();
@@ -71,6 +73,8 @@ export class HomePage implements OnInit {
 
   morningBeginChanged(event) {
     if (this.morningBegin) {
+      this.morningBegin = this.timeNormalizer(this.morningBegin, 8);
+
       this.storage.set('morning_begin', this.morningBegin);
 
       if (!this.morningEnd) {
@@ -83,6 +87,8 @@ export class HomePage implements OnInit {
 
   afternoonBeginChanged(event) {
     if (this.afternoonBegin) {
+      this.afternoonBegin = this.timeNormalizer(this.afternoonBegin, 13, 30);
+
       this.storage.set('afternoon_begin', this.afternoonBegin);
 
       if (!this.afternoonEnd) {
@@ -95,6 +101,8 @@ export class HomePage implements OnInit {
 
   morningDiffChanged(event) {
     if (this.morningBegin && this.morningEnd) {
+      this.morningEnd = this.timeNormalizer(this.morningEnd, 12);
+
       this.morningDiff = this.calculateDiff(this.morningBegin, this.morningEnd, 4);
 
       this.storage.set('morning_end', this.morningEnd);
@@ -105,6 +113,8 @@ export class HomePage implements OnInit {
 
   afternoonDiffChanged(event) {
     if (this.afternoonBegin && this.afternoonEnd) {
+      this.afternoonEnd = this.timeNormalizer(this.afternoonEnd, 18);
+
       this.afternoonDiff = this.calculateDiff(this.afternoonBegin, this.afternoonEnd, 4.5);
 
       this.storage.set('afternoon_end', this.afternoonEnd);
@@ -135,6 +145,30 @@ export class HomePage implements OnInit {
     const diff = moment.duration(dtEnd.diff(dtInit));
 
     return Math.round(diff.asMinutes() - (hoursBase * 60));
+  }
+
+  timeNormalizer(time, dH, dM = 0){
+    const defaultTime = moment().hour(dH).minute(dM);
+    const momentTime = moment(time)
+    
+    const duration = moment.duration(defaultTime.diff(momentTime));
+    const minutes = duration.asMinutes();
+
+    if(minutes <= 5 && minutes >= -5){
+      this.showToast();
+
+      return defaultTime.format();
+    } else {
+      return time;
+    }
+  }
+
+  async showToast(){
+    const toast = await this.toastCtrl.create({
+      message: 'Horário informando está no intervalo de 5 minutos, será considerado o horário padrão',
+      duration: 3000
+    });
+    toast.present();
   }
 
 }
