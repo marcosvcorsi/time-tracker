@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import * as moment from 'moment';
 import { Storage } from '@ionic/storage';
 import { ToastController } from '@ionic/angular';
+import { SwUpdate } from '@angular/service-worker';
 
 @Component({
   selector: 'app-home',
@@ -26,7 +27,12 @@ export class HomePage implements OnInit {
   isSaving = false;
 
   constructor(private storage: Storage,
-              private toastCtrl: ToastController) {}
+              private toastCtrl: ToastController,
+              private updates: SwUpdate) {
+    this.updates.available.subscribe(() => {
+      this.updates.activateUpdate().then(() => document.location.reload());
+    });
+  }
 
   ngOnInit() {
     this.loadHist();
