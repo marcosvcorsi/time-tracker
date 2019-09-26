@@ -1,14 +1,14 @@
 <ion-header>
   <ion-toolbar color="primary">
     <ion-title>
-      Portal RH
+      Registro Ponto
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
   <div class="ion-padding">
-    <h6 class="app-title"><ion-icon name="time"></ion-icon><span class="span-title">Horário 08:00 - 12:00 / 13:30 - 18:00</span></h6>
+    <h6 class="app-title">Horário 08:00 - 12:00 / 13:30 - 18:00</h6>
     <ion-list>
       <ion-item>
         <ion-label>Manhã</ion-label>
@@ -28,7 +28,29 @@
       </ion-item>
     </ion-list>
     <section class="btn-containter">
+        <ion-button (click)="saveTime()" [disabled]="!canSave()">Salvar</ion-button>
         <ion-button (click)="clearTime()">Limpar</ion-button>
     </section>
+    <ion-list class="list-hist">
+        <ion-item-sliding *ngFor="let hist of listHist">
+            <ion-item>
+                <ion-avatar slot="start">
+                  <img src="../../assets/time-icon-png-28.jpg">
+                </ion-avatar>
+                <ion-label>
+                  <h2><b>{{hist.morningStart | date: 'dd/MM'}} - {{hist.morningStart | dayOfTheWeek }}</b></h2>
+                  <h3>Manhã: {{hist.morningStart  | date: 'HH:mm'}} - {{hist.morningEnd  | date: 'HH:mm'}} </h3>
+                  <h3>Tarde: {{hist.afternoonStart  | date: 'HH:mm'}} - {{hist.afternoonEnd  | date: 'HH:mm'}}</h3>
+                </ion-label>
+                <span slot="end" *ngIf="hist.diff !== 0" 
+                      [ngClass]="{'span-red': hist.diff < 0, 'span-green': hist.diff > 0}">
+                      {{hist.diff > 0 ? '+' : ''}}{{hist.diff}}
+                </span>
+            </ion-item>
+            <ion-item-options side="end">
+              <ion-item-option (click)="remove(hist)">Excluir</ion-item-option>
+            </ion-item-options>
+          </ion-item-sliding>
+    </ion-list>
   </div>
 </ion-content>

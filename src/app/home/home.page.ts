@@ -21,11 +21,33 @@ export class HomePage implements OnInit {
 
   totalDiff = 0;
 
+  listHist = []
+
+  isSaving = false;
+
   constructor(private storage: Storage,
               private toastCtrl: ToastController) {}
 
   ngOnInit() {
+    this.loadHist();
+
     this.loadTimes();
+  }
+
+  loadHist(){
+    this.storage.get('list_hist').then((list) => {
+      if (list) {
+        this.listHist = JSON.parse(list);
+        
+        this.orderListHist();
+      }
+    });
+  }
+
+  orderListHist(){
+    this.listHist.sort((a, b) => {
+      return new Date(a.morningStart).getTime() - new Date(b.morningStart).getTime();
+    }).reverse();
   }
 
   loadTimes() {
@@ -52,6 +74,13 @@ export class HomePage implements OnInit {
         this.afternoonEnd = val;
       }
     });
+
+
+  }
+
+  canSave(){
+    return this.morningBegin && this.morningEnd && 
+           this.afternoonBegin && this.afternoonEnd && !this.isSaving;
   }
 
   clearTime() {
@@ -69,6 +98,31 @@ export class HomePage implements OnInit {
     this.storage.set('morning_end', null);
     this.storage.set('afternoon_begin', null);
     this.storage.set('afternoon_end', null);
+
+    this.isSaving = false;
+  }
+
+  saveTime() {
+    this.isSaving = true;
+
+    let dataToSave = {
+      morningStart: this.morningBegin,
+      morningEnd: this.morningEnd,
+      afternoonStart: this.afternoonBegin,
+      afternoonEnd: this.afternoonEnd,
+      diff: 0
+    }
+
+    dataToSave.diff = this.calculateDiffFromObject(dataToSave);
+
+    this.listHist.push(dataToSave);
+
+    this.storage.set('list_hist', JSON.stringify(this.listHist));
+
+    this.showToast('Horários salvos com sucesso!');
+
+    this.orderListHist();
+    this.clearTime();
   }
 
   morningBeginChanged(event) {
@@ -147,6 +201,22 @@ export class HomePage implements OnInit {
     return Math.round(diff.asMinutes() - (hoursBase * 60));
   }
 
+  calculateDiffFromObject(item){
+    const mDiff = this.calculateDiff(item.morningStart, item.morningEnd, 4);
+    const aDiff = this.calculateDiff(item.afternoonStart, item.afternoonEnd, 4.5);
+
+    return mDiff + aDiff;
+  }
+
+  remove(hist) {
+    const index = this.listHist.indexOf(hist);
+    this.listHist.splice(index, 1);
+    
+    this.storage.set('list_hist', JSON.stringify(this.listHist));
+
+    this.showToast('Item removido com sucesso');
+  }
+
   timeNormalizer(time, dH, dM = 0){
     const defaultTime = moment().hour(dH).minute(dM);
     const momentTime = moment(time)
@@ -155,7 +225,7 @@ export class HomePage implements OnInit {
     const minutes = duration.asMinutes();
 
     if(minutes <= 5 && minutes >= -5){
-      this.showToast();
+      this.showToast('Horário informando está no intervalo de 5 minutos, será considerado o horário padrão');
 
       return defaultTime.format();
     } else {
@@ -163,9 +233,9 @@ export class HomePage implements OnInit {
     }
   }
 
-  async showToast(){
+  async showToast(msg){
     const toast = await this.toastCtrl.create({
-      message: 'Horário informando está no intervalo de 5 minutos, será considerado o horário padrão',
+      message: msg,
       duration: 3000
     });
     toast.present();
