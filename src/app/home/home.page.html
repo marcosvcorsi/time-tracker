@@ -1,5 +1,10 @@
 <ion-header>
   <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+        <ion-button>
+          <ion-icon slot="icon-only" name="finger-print"></ion-icon>
+        </ion-button>
+    </ion-buttons>
     <ion-title>
       Registro Ponto
     </ion-title>
@@ -29,7 +34,7 @@
     </ion-list>
     <section class="btn-containter">
         <ion-button (click)="saveTime()" [disabled]="!canSave()">Salvar</ion-button>
-        <ion-button (click)="clearTime()">Limpar</ion-button>
+        <ion-button (click)="clearTime()" [disabled]="!canClear()">Limpar</ion-button>
     </section>
     <ion-list class="list-hist">
         <ion-item-sliding *ngFor="let hist of listHist">
@@ -54,3 +59,13 @@
     </ion-list>
   </div>
 </ion-content>
+<ion-footer>
+    <ion-toolbar>
+        <ion-title text-right>
+          BH:  
+          <span [ngClass]="{'span-red': totalList < 0, 'span-green': totalList >= 0}">
+            {{totalList > 0 ? '+' : ''}}{{totalList}}
+          </span>
+        </ion-title>
+    </ion-toolbar>
+</ion-footer>

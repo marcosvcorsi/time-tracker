@@ -11,11 +11,11 @@ import { SwUpdate } from '@angular/service-worker';
 })
 export class HomePage implements OnInit {
 
-  morningBegin;
-  morningEnd;
+  morningBegin = '';
+  morningEnd = '';
 
-  afternoonBegin;
-  afternoonEnd;
+  afternoonBegin = '';
+  afternoonEnd = '';
 
   morningDiff = 0;
   afternoonDiff = 0;
@@ -23,6 +23,7 @@ export class HomePage implements OnInit {
   totalDiff = 0;
 
   listHist = []
+  totalList = 0;
 
   isSaving = false;
 
@@ -46,6 +47,7 @@ export class HomePage implements OnInit {
         this.listHist = JSON.parse(list);
         
         this.orderListHist();
+        this.getTotalFromList();
       }
     });
   }
@@ -89,6 +91,11 @@ export class HomePage implements OnInit {
            this.afternoonBegin && this.afternoonEnd && !this.isSaving;
   }
 
+  canClear(){
+    return this.morningBegin != '' || this.morningEnd != '' || 
+           this.afternoonBegin != '' || this.afternoonEnd != '';
+  }
+
   clearTime() {
     this.morningBegin = '';
     this.morningEnd = '';
@@ -128,6 +135,7 @@ export class HomePage implements OnInit {
     this.showToast('Horários salvos com sucesso!');
 
     this.orderListHist();
+    this.getTotalFromList();
     this.clearTime();
   }
 
@@ -219,8 +227,17 @@ export class HomePage implements OnInit {
     this.listHist.splice(index, 1);
     
     this.storage.set('list_hist', JSON.stringify(this.listHist));
+    this.getTotalFromList();
 
     this.showToast('Item removido com sucesso');
+  }
+
+  getTotalFromList(){
+    this.totalList = 0;
+
+    this.listHist.forEach(lh => {
+      this.totalList += lh.diff;
+    });
   }
 
   timeNormalizer(time, dH, dM = 0){
@@ -230,7 +247,7 @@ export class HomePage implements OnInit {
     const duration = moment.duration(defaultTime.diff(momentTime));
     const minutes = duration.asMinutes();
 
-    if(minutes <= 5 && minutes >= -5){
+    if(minutes <= 5.1 && minutes >= -5.1){
       this.showToast('Horário informando está no intervalo de 5 minutos, será considerado o horário padrão');
 
       return defaultTime.format();
