@@ -13,7 +13,7 @@
 
 <ion-content>
   <div class="ion-padding">
-    <h6 class="app-title">Horário 08:00 - 12:00 / 13:30 - 18:00</h6>
+    <h6 class="app-title"><strong>Horário 08:00 - 12:00 / 13:30 - 18:00</strong></h6>
     <ion-list>
       <ion-item>
         <ion-label>Manhã</ion-label>
@@ -33,11 +33,11 @@
       </ion-item>
     </ion-list>
     <section class="btn-containter">
-        <ion-button (click)="saveTime()" [disabled]="!canSave()">Salvar</ion-button>
-        <ion-button (click)="clearTime()" [disabled]="!canClear()">Limpar</ion-button>
+        <ion-button (click)="saveTime()" [disabled]="!canSave()" color="success">Salvar</ion-button>
+        <ion-button (click)="clearTime()" [disabled]="!canClear()" color="light">Limpar</ion-button>
     </section>
     <ion-list class="list-hist">
-        <ion-item-sliding *ngFor="let hist of listHist">
+        <ion-item-sliding *ngFor="let hist of listHist" #slidingItem>
             <ion-item>
                 <ion-avatar slot="start">
                   <img src="../../assets/time-icon-png-28.jpg">
@@ -53,7 +53,8 @@
                 </span>
             </ion-item>
             <ion-item-options side="end">
-              <ion-item-option (click)="remove(hist)">Excluir</ion-item-option>
+              <ion-item-option (click)="edit(hist, slidingItem)" color="success">Editar</ion-item-option>
+              <ion-item-option (click)="remove(hist, slidingItem)" color="danger">Excluir</ion-item-option>
             </ion-item-options>
           </ion-item-sliding>
     </ion-list>

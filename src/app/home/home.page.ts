@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import * as moment from 'moment';
 import { Storage } from '@ionic/storage';
-import { ToastController } from '@ionic/angular';
+import { ToastController, AlertController } from '@ionic/angular';
 import { SwUpdate } from '@angular/service-worker';
 
 @Component({
@@ -26,10 +26,14 @@ export class HomePage implements OnInit {
   totalList = 0;
 
   isSaving = false;
+  isEditting = false;
+
+  index = -1;
 
   constructor(private storage: Storage,
               private toastCtrl: ToastController,
-              private updates: SwUpdate) {
+              private updates: SwUpdate,
+              private alertController: AlertController) {
     this.updates.available.subscribe(() => {
       this.updates.activateUpdate().then(() => document.location.reload());
     });
@@ -45,7 +49,7 @@ export class HomePage implements OnInit {
     this.storage.get('list_hist').then((list) => {
       if (list) {
         this.listHist = JSON.parse(list);
-        
+
         this.orderListHist();
         this.getTotalFromList();
       }
@@ -87,13 +91,13 @@ export class HomePage implements OnInit {
   }
 
   canSave(){
-    return this.morningBegin && this.morningEnd && 
+    return this.morningBegin && this.morningEnd &&
            this.afternoonBegin && this.afternoonEnd && !this.isSaving;
   }
 
   canClear(){
-    return this.morningBegin != '' || this.morningEnd != '' || 
-           this.afternoonBegin != '' || this.afternoonEnd != '';
+    return this.morningBegin !== '' || this.morningEnd !== '' ||
+           this.afternoonBegin !== '' || this.afternoonEnd !== '';
   }
 
   clearTime() {
@@ -118,7 +122,7 @@ export class HomePage implements OnInit {
   saveTime() {
     this.isSaving = true;
 
-    let dataToSave = {
+    const dataToSave = {
       morningStart: this.morningBegin,
       morningEnd: this.morningEnd,
       afternoonStart: this.afternoonBegin,
@@ -128,7 +132,14 @@ export class HomePage implements OnInit {
 
     dataToSave.diff = this.calculateDiffFromObject(dataToSave);
 
-    this.listHist.push(dataToSave);
+    if (this.isEditting) {
+      this.listHist[this.index] = dataToSave;
+
+      this.isEditting = false;
+      this.index = -1;
+    } else {
+      this.listHist.push(dataToSave);
+    }
 
     this.storage.set('list_hist', JSON.stringify(this.listHist));
 
@@ -222,15 +233,50 @@ export class HomePage implements OnInit {
     return mDiff + aDiff;
   }
 
-  remove(hist) {
-    const index = this.listHist.indexOf(hist);
-    this.listHist.splice(index, 1);
-    
-    this.storage.set('list_hist', JSON.stringify(this.listHist));
-    this.getTotalFromList();
+  edit(hist, slidingItem) {
+    this.isEditting = true;
+    this.index = this.listHist.indexOf(hist);
 
-    this.showToast('Item removido com sucesso');
+    this.morningBegin = hist.morningStart;
+    this.morningEnd = hist.morningEnd;
+    this.afternoonBegin = hist.afternoonStart;
+    this.afternoonEnd = hist.afternoonEnd;
+
+    console.log(this.index, this.isEditting);
+
+    slidingItem.close();
   }
+
+  async remove(hist, slidingItem) {
+    slidingItem.close();
+
+    const alert = await this.alertController.create({
+      header: 'Atenção',
+      message: 'Confirma exclusão deste registro?',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+          cssClass: 'secondary',
+        }, {
+          text: 'OK',
+          handler: () => {
+            const index = this.listHist.indexOf(hist);
+            this.listHist.splice(index, 1);
+
+            this.storage.set('list_hist', JSON.stringify(this.listHist));
+            this.getTotalFromList();
+
+            this.showToast('Item removido com sucesso');
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+
 
   getTotalFromList(){
     this.totalList = 0;
@@ -240,10 +286,10 @@ export class HomePage implements OnInit {
     });
   }
 
-  timeNormalizer(time, dH, dM = 0){
+  timeNormalizer(time, dH, dM = 0) {
     const defaultTime = moment().hour(dH).minute(dM);
     const momentTime = moment(time)
-    
+
     const duration = moment.duration(defaultTime.diff(momentTime));
     const minutes = duration.asMinutes();
 
@@ -256,7 +302,7 @@ export class HomePage implements OnInit {
     }
   }
 
-  async showToast(msg){
+  async showToast(msg) {
     const toast = await this.toastCtrl.create({
       message: msg,
       duration: 3000
