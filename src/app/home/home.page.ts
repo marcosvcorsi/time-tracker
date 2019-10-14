@@ -30,13 +30,23 @@ export class HomePage implements OnInit {
 
   index = -1;
 
+  tabSelected = 'horario';
+
+  minutesValues = [];
+
   constructor(private storage: Storage,
-              private toastCtrl: ToastController,
-              private updates: SwUpdate,
-              private alertController: AlertController) {
+    private toastCtrl: ToastController,
+    private updates: SwUpdate,
+    private alertController: AlertController) {
     this.updates.available.subscribe(() => {
       this.updates.activateUpdate().then(() => document.location.reload());
     });
+
+    for (let i = 0; i < 60; i++) {
+      this.minutesValues.push(i);
+    }
+
+    this.minutesValues.push(0);
   }
 
   ngOnInit() {
@@ -45,7 +55,7 @@ export class HomePage implements OnInit {
     this.loadTimes();
   }
 
-  loadHist(){
+  loadHist() {
     this.storage.get('list_hist').then((list) => {
       if (list) {
         this.listHist = JSON.parse(list);
@@ -56,7 +66,7 @@ export class HomePage implements OnInit {
     });
   }
 
-  orderListHist(){
+  orderListHist() {
     this.listHist.sort((a, b) => {
       return new Date(a.morningStart).getTime() - new Date(b.morningStart).getTime();
     }).reverse();
@@ -86,18 +96,16 @@ export class HomePage implements OnInit {
         this.afternoonEnd = val;
       }
     });
-
-
   }
 
-  canSave(){
+  canSave() {
     return this.morningBegin && this.morningEnd &&
-           this.afternoonBegin && this.afternoonEnd && !this.isSaving;
+      this.afternoonBegin && this.afternoonEnd && !this.isSaving;
   }
 
-  canClear(){
+  canClear() {
     return this.morningBegin !== '' || this.morningEnd !== '' ||
-           this.afternoonBegin !== '' || this.afternoonEnd !== '';
+      this.afternoonBegin !== '' || this.afternoonEnd !== '';
   }
 
   clearTime() {
@@ -148,11 +156,13 @@ export class HomePage implements OnInit {
     this.orderListHist();
     this.getTotalFromList();
     this.clearTime();
+
+    this.tabSelected = 'historico';
   }
 
   morningBeginChanged(event) {
     if (this.morningBegin) {
-      this.morningBegin = this.timeNormalizer(this.morningBegin, 8);
+      // this.morningBegin = this.timeNormalizer(this.morningBegin, 8);
 
       this.storage.set('morning_begin', this.morningBegin);
 
@@ -166,7 +176,7 @@ export class HomePage implements OnInit {
 
   afternoonBeginChanged(event) {
     if (this.afternoonBegin) {
-      this.afternoonBegin = this.timeNormalizer(this.afternoonBegin, 13, 30);
+      // this.afternoonBegin = this.timeNormalizer(this.afternoonBegin, 13, 30);
 
       this.storage.set('afternoon_begin', this.afternoonBegin);
 
@@ -175,12 +185,28 @@ export class HomePage implements OnInit {
       } else {
         this.afternoonDiffChanged(event);
       }
+
+      this.checkInterval();
+    }
+  }
+
+  async checkInterval() {
+    const interval = this.calculateDiff(this.morningEnd, this.afternoonBegin, 1);
+
+    if (interval < 0) {
+      const alert = await this.alertController.create({
+        header: 'Atenção',
+        message: 'Intervalo menor que uma hora',
+        buttons: ['OK']
+      });
+
+      await alert.present();
     }
   }
 
   morningDiffChanged(event) {
     if (this.morningBegin && this.morningEnd) {
-      this.morningEnd = this.timeNormalizer(this.morningEnd, 12);
+      // this.morningEnd = this.timeNormalizer(this.morningEnd, 12);
 
       this.morningDiff = this.calculateDiff(this.morningBegin, this.morningEnd, 4);
 
@@ -192,7 +218,7 @@ export class HomePage implements OnInit {
 
   afternoonDiffChanged(event) {
     if (this.afternoonBegin && this.afternoonEnd) {
-      this.afternoonEnd = this.timeNormalizer(this.afternoonEnd, 18);
+      // this.afternoonEnd = this.timeNormalizer(this.afternoonEnd, 18);
 
       this.afternoonDiff = this.calculateDiff(this.afternoonBegin, this.afternoonEnd, 4.5);
 
@@ -226,7 +252,7 @@ export class HomePage implements OnInit {
     return Math.round(diff.asMinutes() - (hoursBase * 60));
   }
 
-  calculateDiffFromObject(item){
+  calculateDiffFromObject(item) {
     const mDiff = this.calculateDiff(item.morningStart, item.morningEnd, 4);
     const aDiff = this.calculateDiff(item.afternoonStart, item.afternoonEnd, 4.5);
 
@@ -242,9 +268,9 @@ export class HomePage implements OnInit {
     this.afternoonBegin = hist.afternoonStart;
     this.afternoonEnd = hist.afternoonEnd;
 
-    console.log(this.index, this.isEditting);
-
     slidingItem.close();
+
+    this.tabSelected = 'horario';
   }
 
   async remove(hist, slidingItem) {
@@ -278,7 +304,7 @@ export class HomePage implements OnInit {
 
 
 
-  getTotalFromList(){
+  getTotalFromList() {
     this.totalList = 0;
 
     this.listHist.forEach(lh => {
@@ -293,7 +319,7 @@ export class HomePage implements OnInit {
     const duration = moment.duration(defaultTime.diff(momentTime));
     const minutes = duration.asMinutes();
 
-    if(minutes <= 5.1 && minutes >= -5.1){
+    if (minutes <= 5.1 && minutes >= -5.1) {
       this.showToast('Horário informando está no intervalo de 5 minutos, será considerado o horário padrão');
 
       return defaultTime.format();
