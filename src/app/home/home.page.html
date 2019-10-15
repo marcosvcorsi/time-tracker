@@ -1,28 +1,33 @@
 <ion-header>
   <ion-toolbar color="primary" class="ion-text-center">
-    <ion-title style="padding: 15px;">
+    <ion-title>
       Registro Ponto
     </ion-title>
+  </ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-segment [(ngModel)]="tabSelected">
-      <ion-segment-button value="horario">
+      <ion-segment-button value="horario" layout="icon-start">
         <ion-label>Horário</ion-label>
+        <ion-icon name="time"></ion-icon>
       </ion-segment-button>
-      <ion-segment-button value="historico">
+      <ion-segment-button value="historico" layout="icon-start">
         <ion-label>Histórico</ion-label>
+        <ion-icon name="clipboard"></ion-icon>
       </ion-segment-button>
     </ion-segment>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [ngSwitch]="tabSelected">
-  <ion-card *ngSwitchCase="'horario'" style="padding: 10px;">
+  <ion-card *ngSwitchCase="'horario'" class="form-card">
     <h6 class="app-title">
       <strong>Horário 08:00 - 12:00 / 13:30 - 18:00</strong>
     </h6>
-    <p style="margin-left: 15px;">
-      <strong>Atenção!</strong> É considerado 8:30 para jornada regular de
-      trabalho, sendo intervalo minimo de 1 hora.
-    </p>
+    <!-- <p style="margin-left: 15px;">
+      <strong>Atenção!</strong> jornada regular de trabalho é de 8 horas e 30
+      minutos, com intervalo de 1 hora e 30 minutos (intervalo minimo é de 1
+      hora).
+    </p> -->
     <ion-list>
       <ion-item>
         <ion-label>Manhã</ion-label>
@@ -77,7 +82,10 @@
             {{ hist.afternoonEnd | date: "HH:mm" }}
           </h3>
         </ion-label>
-        <span slot="end" *ngIf="hist.diff !== 0" [ngClass]="{ 'span-red': hist.diff < 0, 'span-green': hist.diff > 0 }">
+        <span slot="end" *ngIf="hist.diff !== 0" [ngClass]="{
+            'span-red': hist.diff < 0,
+            'span-green': hist.diff > 0
+          }">
           {{ hist.diff > 0 ? "+" : "" }}{{ hist.diff }}
         </span>
       </ion-item>
