@@ -194,13 +194,18 @@ export class HomePage implements OnInit {
     const interval = this.calculateDiff(this.morningEnd, this.afternoonBegin, 1);
 
     if (interval < 0) {
-      const alert = await this.alertController.create({
+      const toast = await this.toastCtrl.create({
         header: 'Atenção',
-        message: 'Intervalo menor que uma hora',
-        buttons: ['OK']
+        message: 'Intervalo inserido menor que uma hora',
+        position: 'bottom',
+        buttons: [
+          {
+            text: 'OK',
+            role: 'cancel',
+          }
+        ]
       });
-
-      await alert.present();
+      toast.present();
     }
   }
 
@@ -301,8 +306,6 @@ export class HomePage implements OnInit {
 
     await alert.present();
   }
-
-
 
   getTotalFromList() {
     this.totalList = 0;
